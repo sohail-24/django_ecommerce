@@ -17,12 +17,16 @@ if not ALLOWED_HOSTS:
     raise ImproperlyConfigured("ALLOWED_HOSTS must be set in production")
 
 # HTTPS Security
-SECURE_SSL_REDIRECT = env.bool("SECURE_SSL_REDIRECT", default=True)
-SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+
+
+# HTTPS Security (TEMPORARY – HTTP mode)
+SECURE_SSL_REDIRECT = False
+# SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+
 
 # Cookies
-SESSION_COOKIE_SECURE = True
-CSRF_COOKIE_SECURE = True
+SESSION_COOKIE_SECURE = False
+CSRF_COOKIE_SECURE = False
 SESSION_COOKIE_SAMESITE = "Strict"
 CSRF_COOKIE_SAMESITE = "Strict"
 
@@ -83,27 +87,18 @@ WHITENOISE_ROOT = BASE_DIR / "staticfiles"
 # CACHING (Redis in Production)
 # =============================================================================
 
+# =============================================================================
+# CACHING (TEMPORARY – no Redis)
+# =============================================================================
+
 CACHES = {
     "default": {
-        "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": env("REDIS_URL"),
-        "OPTIONS": {
-            "CLIENT_CLASS": "django_redis.client.DefaultClient",
-            "PARSER_CLASS": "redis.connection.HiredisParser",
-            "SOCKET_CONNECT_TIMEOUT": 5,
-            "SOCKET_TIMEOUT": 5,
-            "RETRY_ON_TIMEOUT": True,
-            "MAX_CONNECTIONS": 100,
-        },
-        "KEY_PREFIX": "django_ecommerce_prod",
-        "TIMEOUT": 300,
+        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
     }
 }
 
-# Session cache
-SESSION_ENGINE = "django.contrib.sessions.backends.cache"
-SESSION_CACHE_ALIAS = "default"
-
+# Use DB sessions instead of Redis
+SESSION_ENGINE = "django.contrib.sessions.backends.db"
 # =============================================================================
 # EMAIL (Production SMTP)
 # =============================================================================
@@ -198,6 +193,8 @@ CELERY_RESULT_EXPIRES = 3600  # 1 hour
 # =============================================================================
 
 # Template caching
+
+TEMPLATES[0]["APP_DIRS"] = False
 TEMPLATES[0]["OPTIONS"]["loaders"] = [
     (
         "django.template.loaders.cached.Loader",
