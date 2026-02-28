@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>{{ object.name }}</h2>
+
+    <div class="row mt-3">
+        {% for product in object.products.all %}
+            <div class="col-md-3 mb-4">
+                <div class="card h-100">
+                    {% if product.images.first %}
+                        <img src="{{ product.images.first.image.url }}" 
+                             class="card-img-top"
+                             style="height:250px; object-fit:cover;">
+                    {% endif %}
+                    <div class="card-body text-center">
+                        <h5>{{ product.name }}</h5>
+                        <p class="text-muted">${{ product.price }}</p>
+                        <a href="{{ product.get_absolute_url }}" 
+                           class="btn btn-dark btn-sm">
+                            View Product
+                        </a>
+                    </div>
+                </div>
+            </div>
+        {% empty %}
+            <p>No products found in this category.</p>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

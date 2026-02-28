@@ -1,0 +1,177 @@
+{% extends 'base.html' %}
+
+{% block title %}Order {{ order.order_number }} - DjangoShop{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-1">
+                    <li class="breadcrumb-item"><a href="{% url 'home' %}">Home</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'accounts:order_history' %}">Orders</a></li>
+                    <li class="breadcrumb-item active">{{ order.order_number }}</li>
+                </ol>
+            </nav>
+            <h1 class="mb-0">Order {{ order.order_number }}</h1>
+        </div>
+        <span class="badge bg-{% if order.status == 'delivered' %}success{% elif order.status == 'cancelled' %}danger{% elif order.status == 'shipped' %}info{% else %}warning{% endif %} fs-6">
+            {{ order.status|title }}
+        </span>
+    </div>
+    
+    <div class="row">
+        <!-- Order Details -->
+        <div class="col-lg-8">
+            <!-- Order Timeline -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Order Status</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between position-relative">
+                        <div class="progress position-absolute w-100" style="top: 15px; height: 4px;">
+                            <div class="progress-bar" role="progressbar" 
+                                 style="width: {% if order.status == 'pending' %}10{% elif order.status == 'paid' %}30{% elif order.status == 'processing' %}50{% elif order.status == 'shipped' %}75{% elif order.status == 'delivered' %}100{% else %}0{% endif %}%"></div>
+                        </div>
+                        
+                        {% with statuses='pending,paid,processing,shipped,delivered'|split:',' %}
+                        {% for s in statuses %}
+                        <div class="text-center position-relative" style="z-index: 1;">
+                            <div class="rounded-circle bg-{% if order.status == s or forloop.counter < order.status_index %}primary{% else %}secondary{% endif %} text-white d-flex align-items-center justify-content-center mx-auto" 
+                                 style="width: 35px; height: 35px;">
+                                <i class="bi bi-{% if s == 'pending' %}clock{% elif s == 'paid' %}check{% elif s == 'processing' %}gear{% elif s == 'shipped' %}truck{% elif s == 'delivered' %}box-seam{% endif %}"></i>
+                            </div>
+                            <small class="d-block mt-1">{{ s|title }}</small>
+                        </div>
+                        {% endfor %}
+                        {% endwith %}
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Order Items -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Order Items ({{ order.item_count }})</h5>
+                </div>
+                <div class="card-body">
+                    {% for item in order.items.all %}
+                    <div class="d-flex mb-3 {% if not forloop.last %}border-bottom pb-3{% endif %}">
+                        <div class="flex-shrink-0">
+                            {% if item.product and item.product.primary_image %}
+                            <img src="{{ item.product.primary_image.image.url }}" class="rounded" alt="" style="width: 80px; height: 80px; object-fit: cover;">
+                            {% else %}
+                            <div class="bg-secondary rounded d-flex align-items-center justify-content-center" style="width: 80px; height: 80px;">
+                                <i class="bi bi-image text-white"></i>
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="mb-1">{{ item.product_name }}</h6>
+                            {% if item.variant_name %}
+                            <p class="text-muted small mb-1">{{ item.variant_name }}</p>
+                            {% endif %}
+                            <p class="text-muted small mb-0">SKU: {{ item.product_sku }}</p>
+                        </div>
+                        <div class="text-end">
+                            <p class="mb-0">${{ item.unit_price }} x {{ item.quantity }}</p>
+                            <p class="fw-bold mb-0">${{ item.subtotal }}</p>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            
+            <!-- Tracking Information -->
+            {% if order.is_shipped %}
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-truck"></i> Shipping Information</h5>
+                </div>
+                <div class="card-body">
+                    <p class="mb-1"><strong>Tracking Number:</strong> 
+                        {% if order.tracking_number %}
+                        {{ order.tracking_number }}
+                        {% else %}
+                        <span class="text-muted">Not available yet</span>
+                        {% endif %}
+                    </p>
+                    <p class="mb-0"><strong>Shipped On:</strong> {{ order.shipped_at|date:"F d, Y" }}</p>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+        
+        <!-- Order Summary -->
+        <div class="col-lg-4">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Order Summary</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Subtotal</span>
+                        <span>${{ order.subtotal }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Shipping</span>
+                        <span>{% if order.shipping_cost == 0 %}Free{% else %}${{ order.shipping_cost }}{% endif %}</span>
+                    </div>
+                    {% if order.tax_amount > 0 %}
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Tax</span>
+                        <span>${{ order.tax_amount }}</span>
+                    </div>
+                    {% endif %}
+                    {% if order.discount_amount > 0 %}
+                    <div class="d-flex justify-content-between mb-2 text-success">
+                        <span>Discount</span>
+                        <span>-${{ order.discount_amount }}</span>
+                    </div>
+                    {% endif %}
+                    <hr>
+                    <div class="d-flex justify-content-between">
+                        <span class="fw-bold">Total</span>
+                        <span class="fw-bold h5 mb-0">${{ order.total }}</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Shipping Address -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-geo-alt"></i> Shipping Address</h5>
+                </div>
+                <div class="card-body">
+                    <p class="mb-0">{{ order.shipping_address_display|linebreaks }}</p>
+                </div>
+            </div>
+            
+            <!-- Billing Address -->
+            {% if not order.billing_same_as_shipping %}
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-credit-card"></i> Billing Address</h5>
+                </div>
+                <div class="card-body">
+                    <p class="mb-0">{{ order.billing_address_display|linebreaks }}</p>
+                </div>
+            </div>
+            {% endif %}
+            
+            <!-- Order Info -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Order Information</h5>
+                </div>
+                <div class="card-body">
+                    <p class="mb-1"><strong>Order Date:</strong> {{ order.created_at|date:"F d, Y" }}</p>
+                    <p class="mb-1"><strong>Order Number:</strong> {{ order.order_number }}</p>
+                    <p class="mb-0"><strong>Email:</strong> {{ order.email }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

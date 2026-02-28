@@ -1,0 +1,6 @@
+# =============================================================================
+# Main Requirements File
+# Points to production requirements by default
+# =============================================================================
+
+-r requirements/prod.txt

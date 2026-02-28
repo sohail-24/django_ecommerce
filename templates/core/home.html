@@ -1,0 +1,203 @@
+{% extends 'base.html' %}
+
+{% block title %}Home - DjangoShop{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero bg-light py-5">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-6">
+                <h1 class="display-4 fw-bold mb-4">Discover Your Style</h1>
+                <p class="lead mb-4">Explore our curated collection of modern clothing. From casual wear to formal attire, find the perfect pieces for every occasion.</p>
+                <div class="d-flex gap-3">
+                    <a href="{% url 'products:product_list' %}" class="btn btn-primary btn-lg">
+                        <i class="bi bi-shop"></i> Shop Now
+                    </a>
+                    <a href="{% url 'products:featured_products' %}" class="btn btn-outline-primary btn-lg">
+                        <i class="bi bi-star"></i> Featured
+                    </a>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="hero-image bg-secondary rounded-4" style="height: 400px;">
+                    <div class="d-flex align-items-center justify-content-center h-100 text-white">
+                        <div class="text-center">
+                            <i class="bi bi-bag-heart display-1"></i>
+                            <p class="mt-3">New Collection Available</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Featured Products -->
+{% if featured_products %}
+<section class="featured-products py-5">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="mb-0">Featured Products</h2>
+            <a href="{% url 'products:featured_products' %}" class="btn btn-outline-primary">
+                View All <i class="bi bi-arrow-right"></i>
+            </a>
+        </div>
+        
+        <div class="row g-4">
+            {% for product in featured_products %}
+            <div class="col-6 col-md-4 col-lg-3">
+                <div class="card h-100 product-card">
+                    <div class="position-relative">
+                        {% if product.primary_image %}
+                        <img src="{{ product.primary_image.image.url }}" class="card-img-top" alt="{{ product.name }}" style="height: 200px; object-fit: cover;">
+                        {% else %}
+                        <div class="bg-secondary d-flex align-items-center justify-content-center" style="height: 200px;">
+                            <i class="bi bi-image text-white display-4"></i>
+                        </div>
+                        {% endif %}
+                        
+                        {% if product.is_on_sale %}
+                        <span class="badge bg-danger position-absolute top-0 end-0 m-2">
+                            -{{ product.discount_percentage }}%
+                        </span>
+                        {% endif %}
+                        
+                        {% if not product.is_in_stock %}
+                        <div class="position-absolute top-0 start-0 w-100 h-100 bg-dark bg-opacity-50 d-flex align-items-center justify-content-center">
+                            <span class="badge bg-secondary">Out of Stock</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="card-body">
+                        <p class="text-muted small mb-1">{{ product.category.name }}</p>
+                        <h5 class="card-title">
+                            <a href="{{ product.get_absolute_url }}" class="text-decoration-none text-dark">
+                                {{ product.name }}
+                            </a>
+                        </h5>
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="fw-bold text-primary">${{ product.price }}</span>
+                            {% if product.compare_at_price %}
+                            <span class="text-muted text-decoration-line-through small">${{ product.compare_at_price }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="card-footer bg-transparent border-0">
+                        <a href="{{ product.get_absolute_url }}" class="btn btn-outline-primary w-100">
+                            View Details
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- New Arrivals -->
+{% if new_arrivals %}
+<section class="new-arrivals py-5 bg-light">
+    <div class="container">
+        <h2 class="mb-4">New Arrivals</h2>
+        
+        <div class="row g-4">
+            {% for product in new_arrivals %}
+            <div class="col-6 col-md-3">
+                <div class="card h-100 product-card">
+                    {% if product.primary_image %}
+                    <img src="{{ product.primary_image.image.url }}" class="card-img-top" alt="{{ product.name }}" style="height: 180px; object-fit: cover;">
+                    {% else %}
+                    <div class="bg-secondary d-flex align-items-center justify-content-center" style="height: 180px;">
+                        <i class="bi bi-image text-white display-5"></i>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="card-body">
+                        <h6 class="card-title">
+                            <a href="{{ product.get_absolute_url }}" class="text-decoration-none text-dark">
+                                {{ product.name|truncatechars:30 }}
+                            </a>
+                        </h6>
+                        <span class="fw-bold text-primary">${{ product.price }}</span>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- Features Section -->
+<section class="features py-5">
+    <div class="container">
+        <div class="row g-4 text-center">
+            <div class="col-md-3">
+                <div class="p-4">
+                    <i class="bi bi-truck display-4 text-primary mb-3"></i>
+                    <h5>Free Shipping</h5>
+                    <p class="text-muted">On orders over $100</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="p-4">
+                    <i class="bi bi-shield-check display-4 text-primary mb-3"></i>
+                    <h5>Secure Payment</h5>
+                    <p class="text-muted">100% secure checkout</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="p-4">
+                    <i class="bi bi-arrow-return-left display-4 text-primary mb-3"></i>
+                    <h5>Easy Returns</h5>
+                    <p class="text-muted">30-day return policy</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="p-4">
+                    <i class="bi bi-headset display-4 text-primary mb-3"></i>
+                    <h5>24/7 Support</h5>
+                    <p class="text-muted">Dedicated support team</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Categories Section -->
+{% if categories %}
+<section class="categories py-5 bg-light">
+    <div class="container">
+        <h2 class="mb-4 text-center">Shop by Category</h2>
+        
+        <div class="row g-4">
+            {% for category in categories %}
+            <div class="col-6 col-md-4 col-lg-3">
+                <a href="{{ category.get_absolute_url }}" class="text-decoration-none">
+                    <div class="card category-card h-100 border-0 shadow-sm">
+                        {% if category.image %}
+                        <img src="{{ category.image.url }}" class="card-img" alt="{{ category.name }}" style="height: 200px; object-fit: cover;">
+                        {% else %}
+                        <div class="bg-secondary d-flex align-items-center justify-content-center" style="height: 200px;">
+                            <i class="bi bi-folder text-white display-4"></i>
+                        </div>
+                        {% endif %}
+                        <div class="card-img-overlay d-flex align-items-end">
+                            <div class="w-100 bg-dark bg-opacity-75 p-2 rounded">
+                                <h5 class="card-title text-white mb-0">{{ category.name }}</h5>
+                                <small class="text-light">{{ category.product_count }} products</small>
+                            </div>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+{% endblock %}

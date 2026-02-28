@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+
+{% block title %}Order Confirmed - DjangoShop{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8 text-center">
+            <i class="bi bi-check-circle-fill display-1 text-success"></i>
+            <h1 class="mt-4">Thank You for Your Order!</h1>
+            <p class="lead">Your order has been placed successfully.</p>
+            
+            <div class="card mt-4">
+                <div class="card-body">
+                    <h5 class="card-title">Order Details</h5>
+                    <p class="mb-1"><strong>Order Number:</strong> {{ order.order_number }}</p>
+                    <p class="mb-1"><strong>Email:</strong> {{ order.email }}</p>
+                    <p class="mb-0"><strong>Total:</strong> ${{ order.total }}</p>
+                </div>
+            </div>
+            
+            <p class="mt-4">We've sent a confirmation email to <strong>{{ order.email }}</strong> with your order details.</p>
+            
+            <div class="d-flex justify-content-center gap-3 mt-4">
+                <a href="{% url 'orders:order_detail' order.order_number %}" class="btn btn-primary">
+                    <i class="bi bi-eye"></i> View Order
+                </a>
+                <a href="{% url 'products:product_list' %}" class="btn btn-outline-primary">
+                    <i class="bi bi-shop"></i> Continue Shopping
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

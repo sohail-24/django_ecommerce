@@ -1,0 +1,119 @@
+{% extends 'base.html' %}
+
+{% block title %}My Addresses - DjangoShop{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-lg-3 mb-4">
+            <div class="card">
+                <div class="card-body text-center">
+                    <i class="bi bi-person-circle display-1 text-muted"></i>
+                    <h5 class="mb-1">{{ user.get_full_name }}</h5>
+                    <p class="text-muted">{{ user.email }}</p>
+                </div>
+                <div class="list-group list-group-flush">
+                    <a href="{% url 'accounts:profile' %}" class="list-group-item list-group-item-action">
+                        <i class="bi bi-person"></i> Profile
+                    </a>
+                    <a href="{% url 'accounts:order_history' %}" class="list-group-item list-group-item-action">
+                        <i class="bi bi-bag"></i> My Orders
+                    </a>
+                    <a href="{% url 'accounts:address_list' %}" class="list-group-item list-group-item-action active">
+                        <i class="bi bi-geo-alt"></i> Addresses
+                    </a>
+                    <a href="{% url 'accounts:password_change' %}" class="list-group-item list-group-item-action">
+                        <i class="bi bi-key"></i> Change Password
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="col-lg-9">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="mb-0">My Addresses</h2>
+                <a href="{% url 'accounts:address_add' %}" class="btn btn-primary">
+                    <i class="bi bi-plus"></i> Add New Address
+                </a>
+            </div>
+            
+            {% if addresses %}
+            <div class="row g-4">
+                {% for address in addresses %}
+                <div class="col-md-6">
+                    <div class="card h-100 {% if address.is_default %}border-primary{% endif %}">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <h5 class="card-title mb-1">
+                                        {{ address.full_name }}
+                                        {% if address.is_default %}
+                                        <span class="badge bg-primary ms-2">Default</span>
+                                        {% endif %}
+                                    </h5>
+                                    <span class="badge bg-secondary mb-2">{{ address.get_address_type_display }}</span>
+                                </div>
+                                <div class="dropdown">
+                                    <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="dropdown">
+                                        <i class="bi bi-three-dots-vertical"></i>
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-end">
+                                        <li>
+                                            <a class="dropdown-item" href="{% url 'accounts:address_edit' address.id %}">
+                                                <i class="bi bi-pencil"></i> Edit
+                                            </a>
+                                        </li>
+                                        {% if not address.is_default %}
+                                        <li>
+                                            <form action="{% url 'accounts:address_set_default' address.id %}" method="post" class="d-inline">
+                                                {% csrf_token %}
+                                                <button type="submit" class="dropdown-item">
+                                                    <i class="bi bi-star"></i> Set as Default
+                                                </button>
+                                            </form>
+                                        </li>
+                                        {% endif %}
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li>
+                                            <form action="{% url 'accounts:address_delete' address.id %}" method="post" class="d-inline">
+                                                {% csrf_token %}
+                                                <button type="submit" class="dropdown-item text-danger" onclick="return confirm('Are you sure you want to delete this address?');">
+                                                    <i class="bi bi-trash"></i> Delete
+                                                </button>
+                                            </form>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <p class="card-text text-muted mb-0">
+                                {{ address.street_address_1 }}<br>
+                                {% if address.street_address_2 %}{{ address.street_address_2 }}<br>{% endif %}
+                                {{ address.city }}, {{ address.state_province }} {{ address.postal_code }}<br>
+                                {{ address.country }}
+                            </p>
+                            {% if address.phone_number %}
+                            <p class="card-text mt-2 mb-0">
+                                <i class="bi bi-telephone"></i> {{ address.phone_number }}
+                            </p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+                <i class="bi bi-geo-alt display-1 text-muted"></i>
+                <h4 class="mt-3">No addresses yet</h4>
+                <p class="text-muted">Add an address to make checkout faster.</p>
+                <a href="{% url 'accounts:address_add' %}" class="btn btn-primary">
+                    <i class="bi bi-plus"></i> Add Address
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

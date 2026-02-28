@@ -1,0 +1,213 @@
+{% extends 'base.html' %}
+
+{% block title %}Checkout - DjangoShop{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <h1 class="mb-4">Checkout</h1>
+    
+    <div class="row">
+        <!-- Checkout Form -->
+        <div class="col-lg-8">
+            <form method="post" id="checkoutForm">
+                {% csrf_token %}
+                
+                <!-- Shipping Address -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-geo-alt"></i> Shipping Address</h5>
+                    </div>
+                    <div class="card-body">
+                        {% if addresses %}
+                        <div class="mb-4">
+                            <label class="form-label">Select a saved address</label>
+                            <div class="list-group">
+                                {% for address in addresses %}
+                                <label class="list-group-item d-flex align-items-start">
+                                    <input type="radio" name="address_id" value="{{ address.id }}" class="form-check-input me-2 mt-1" {% if address.is_default %}checked{% endif %}>
+                                    <div>
+                                        <strong>{{ address.full_name }}</strong>
+                                        {% if address.is_default %}<span class="badge bg-primary ms-2">Default</span>{% endif %}
+                                        <p class="mb-0 text-muted small">
+                                            {{ address.street_address_1 }}<br>
+                                            {{ address.city }}, {{ address.state_province }} {{ address.postal_code }}<br>
+                                            {{ address.country }}
+                                        </p>
+                                    </div>
+                                </label>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        
+                        <div class="form-check mb-3">
+                            <input type="checkbox" name="use_new_address" class="form-check-input" id="useNewAddress">
+                            <label class="form-check-label" for="useNewAddress">
+                                Use a different address
+                            </label>
+                        </div>
+                        {% endif %}
+                        
+                        <!-- New Address Form -->
+                        <div id="newAddressForm" {% if addresses %}style="display: none;"{% endif %}>
+                            <div class="row g-3">
+                                <div class="col-12">
+                                    <label class="form-label">Full Name *</label>
+                                    <input type="text" name="shipping_full_name" class="form-control" {% if not addresses %}required{% endif %}>
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label">Street Address *</label>
+                                    <input type="text" name="shipping_street_address_1" class="form-control" {% if not addresses %}required{% endif %}>
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label">Apartment, Suite, etc. (optional)</label>
+                                    <input type="text" name="shipping_street_address_2" class="form-control">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">City *</label>
+                                    <input type="text" name="shipping_city" class="form-control" {% if not addresses %}required{% endif %}>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">State/Province *</label>
+                                    <input type="text" name="shipping_state_province" class="form-control" {% if not addresses %}required{% endif %}>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Postal Code *</label>
+                                    <input type="text" name="shipping_postal_code" class="form-control" {% if not addresses %}required{% endif %}>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Country *</label>
+                                    <input type="text" name="shipping_country" class="form-control" value="US" {% if not addresses %}required{% endif %}>
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label">Phone Number</label>
+                                    <input type="tel" name="shipping_phone" class="form-control">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Order Notes -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-chat-left-text"></i> Order Notes</h5>
+                    </div>
+                    <div class="card-body">
+                        <textarea name="customer_note" class="form-control" rows="3" placeholder="Any special instructions for your order..."></textarea>
+                    </div>
+                </div>
+                
+                <!-- Mobile Order Summary -->
+                <div class="d-lg-none mb-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">Order Summary</h5>
+                        </div>
+                        <div class="card-body">
+                            {% for item in cart.items.all %}
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>{{ item.quantity }}x {{ item.product.name|truncatechars:30 }}</span>
+                                <span>${{ item.subtotal }}</span>
+                            </div>
+                            {% endfor %}
+                            <hr>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>Subtotal</span>
+                                <span>${{ cart.subtotal }}</span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>Shipping</span>
+                                <span>{% if cart.shipping_cost == 0 %}Free{% else %}${{ cart.shipping_cost }}{% endif %}</span>
+                            </div>
+                            <hr>
+                            <div class="d-flex justify-content-between">
+                                <span class="fw-bold">Total</span>
+                                <span class="fw-bold">${{ cart.total }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Submit Button -->
+                <button type="submit" class="btn btn-primary btn-lg w-100">
+                    Continue to Payment <i class="bi bi-arrow-right"></i>
+                </button>
+            </form>
+        </div>
+        
+        <!-- Order Summary (Desktop) -->
+        <div class="col-lg-4 d-none d-lg-block">
+            <div class="card sticky-top" style="top: 20px;">
+                <div class="card-header">
+                    <h5 class="mb-0">Order Summary</h5>
+                </div>
+                <div class="card-body">
+                    {% for item in cart.items.all %}
+                    <div class="d-flex mb-3">
+                        <div class="flex-shrink-0">
+                            {% if item.product.primary_image %}
+                            <img src="{{ item.product.primary_image.image.url }}" class="rounded" alt="" style="width: 60px; height: 60px; object-fit: cover;">
+                            {% else %}
+                            <div class="bg-secondary rounded d-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
+                                <i class="bi bi-image text-white"></i>
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="mb-0">{{ item.product.name|truncatechars:25 }}</h6>
+                            {% if item.variant %}
+                            <small class="text-muted">{{ item.variant.name }}</small>
+                            {% endif %}
+                            <p class="mb-0">Qty: {{ item.quantity }}</p>
+                        </div>
+                        <div class="flex-shrink-0">
+                            <span class="fw-bold">${{ item.subtotal }}</span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                    
+                    <hr>
+                    
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Subtotal</span>
+                        <span>${{ cart.subtotal }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Shipping</span>
+                        <span>
+                            {% if cart.shipping_cost == 0 %}
+                            <span class="text-success">Free</span>
+                            {% else %}
+                            ${{ cart.shipping_cost }}
+                            {% endif %}
+                        </span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Tax</span>
+                        <span>Calculated at payment</span>
+                    </div>
+                    <hr>
+                    <div class="d-flex justify-content-between">
+                        <span class="fw-bold h5">Total</span>
+                        <span class="fw-bold h5">${{ cart.total }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Toggle new address form
+    document.getElementById('useNewAddress')?.addEventListener('change', function() {
+        document.getElementById('newAddressForm').style.display = this.checked ? 'block' : 'none';
+        // Toggle required attributes
+        const inputs = document.querySelectorAll('#newAddressForm input');
+        inputs.forEach(input => {
+            input.required = this.checked;
+        });
+    });
+</script>
+{% endblock %}
