@@ -28,7 +28,9 @@ jobs:
 
       - name: Build and Push Docker Image
         run: |
-          docker build -t sohail28/django-ecommerce:latest .
+          docker build -t sohail28/django-ecommerce:${TAG} .
+          docker tag sohail28/django-ecommerce:${TAG} sohail28/django-ecommerce:latest
+          docker push sohail28/django-ecommerce:${TAG}
           docker push sohail28/django-ecommerce:latest
 
       - name: Clone Infra Repo
