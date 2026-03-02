@@ -28,8 +28,8 @@ jobs:
 
       - name: Build and Push Docker Image
         run: |
-          docker build -t sohail28/django-ecommerce:${TAG} .
-          docker push sohail28/django-ecommerce:${TAG}
+          docker build -t sohail28/django-ecommerce:latest .
+          docker push sohail28/django-ecommerce:latest
 
       - name: Update Kubernetes Manifest
         run: |

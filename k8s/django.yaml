@@ -15,7 +15,8 @@ spec:
     spec:
       containers:
         - name: django
-          image: sohail28/django-ecommerce:k8s-v10
+          image: sohail28/django-ecommerce:latest
+          imagePullPolicy: Always
           resources:
             requests:
               cpu: "200m"
