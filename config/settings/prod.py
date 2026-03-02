@@ -87,15 +87,36 @@ WHITENOISE_ROOT = BASE_DIR / "staticfiles"
 # CACHING (Redis in Production)
 # =============================================================================
 
+CACHES = {
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": env("REDIS_URL"),
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+            "SOCKET_CONNECT_TIMEOUT": 5,
+            "SOCKET_TIMEOUT": 5,
+            "RETRY_ON_TIMEOUT": True,
+            "MAX_CONNECTIONS": 100,
+        },
+        "KEY_PREFIX": "django_ecommerce_prod",
+        "TIMEOUT": 300,
+    }
+}
+
+SESSION_ENGINE = "django.contrib.sessions.backends.cache"
+SESSION_CACHE_ALIAS = "default"
+
+
+
 # =============================================================================
 # CACHING (TEMPORARY – no Redis)
 # =============================================================================
 
-CACHES = {
-    "default": {
-        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
-    }
-}
+#CACHES = {
+#    "default": {
+#        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+#    }
+#}
 
 # Use DB sessions instead of Redis
 SESSION_ENGINE = "django.contrib.sessions.backends.db"
@@ -211,3 +232,22 @@ TEMPLATES[0]["OPTIONS"]["loaders"] = [
 
 # Health check token for load balancer verification
 HEALTH_CHECK_TOKEN = env("HEALTH_CHECK_TOKEN", default="")
+
+
+
+
+# =============================================================================
+# PROXY + CSRF (K8s + NGINX)
+# =============================================================================
+
+ALLOWED_HOSTS = ["13.235.114.46"]
+
+CSRF_TRUSTED_ORIGINS = [
+    "http://13.235.114.46:30678",
+]
+
+USE_X_FORWARDED_HOST = True
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "http")
+
+SESSION_COOKIE_SAMESITE = "Lax"
+CSRF_COOKIE_SAMESITE = "Lax"

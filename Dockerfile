@@ -19,6 +19,7 @@ COPY . .
 
 # 🔥 FIX
 RUN mkdir -p /app/logs
+RUN mkdir -p /app/media
 
 EXPOSE 8000
 

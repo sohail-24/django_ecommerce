@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-media
+  namespace: ecommerce
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nginx-media
+  template:
+    metadata:
+      labels:
+        app: nginx-media
+    spec:
+      containers:
+        - name: nginx
+          image: nginx:1.25-alpine
+          ports:
+            - containerPort: 80
+          volumeMounts:
+            - name: media-volume
+              mountPath: /app/media
+            - name: nginx-config
+              mountPath: /etc/nginx/conf.d
+      volumes:
+        - name: media-volume
+          persistentVolumeClaim:
+            claimName: django-media-pvc
+        - name: nginx-config
+          configMap:
+            name: nginx-media-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-media
+  namespace: ecommerce
+spec:
+  selector:
+    app: nginx-media
+  ports:
+    - port: 80
+      targetPort: 80
+  type: ClusterIP
