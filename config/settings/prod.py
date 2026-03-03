@@ -240,10 +240,10 @@ HEALTH_CHECK_TOKEN = env("HEALTH_CHECK_TOKEN", default="")
 # PROXY + CSRF (K8s + NGINX)
 # =============================================================================
 
-ALLOWED_HOSTS = ["13.235.114.46"]
+ALLOWED_HOSTS = ["3.6.94.103"]
 
 CSRF_TRUSTED_ORIGINS = [
-    "http://13.235.114.46:30678",
+    "http://3.6.94.103:32247",
 ]
 
 USE_X_FORWARDED_HOST = True
