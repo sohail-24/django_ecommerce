@@ -24,7 +24,7 @@ jobs:
 
       - name: Extract Commit SHA
         id: vars
-        run: echo "TAG=${GITHUB_SHA::7}" >> $GITHUB_ENV
+        run: echo "TAG=$(echo ${GITHUB_SHA} | cut -c1-7)" >> $GITHUB_ENV
 
       - name: Build and Push Docker Image
         run: |
