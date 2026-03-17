@@ -12,7 +12,8 @@ from .base import *
 DEBUG = False
 
 # Ensure ALLOWED_HOSTS is properly configured
-ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=[])
+#ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=[])
+ALLOWED_HOSTS = ["*"]
 if not ALLOWED_HOSTS:
     raise ImproperlyConfigured("ALLOWED_HOSTS must be set in production")
 
@@ -242,11 +243,11 @@ HEALTH_CHECK_TOKEN = env("HEALTH_CHECK_TOKEN", default="")
 
 
 CSRF_TRUSTED_ORIGINS = [
-    "http://3.6.94.103:32247",
+    "http://k8s-ecommerc-djangoin-9b90197ea7-53381200.ap-south-1.elb.amazonaws.com"
 ]
 
 USE_X_FORWARDED_HOST = True
-SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "http")
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
 SESSION_COOKIE_SAMESITE = "Lax"
 CSRF_COOKIE_SAMESITE = "Lax"
