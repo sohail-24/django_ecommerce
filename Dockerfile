@@ -17,6 +17,7 @@ RUN pip install -r requirements/prod.txt
 
 COPY . .
 
+ENV DJANGO_SETTINGS_MODULE=config.settings.prod
 # 🔥 FIX
 RUN mkdir -p /app/logs
 RUN mkdir -p /app/media
