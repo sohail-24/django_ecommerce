@@ -23,7 +23,6 @@ jobs:
           password: ${{ secrets.DOCKER_PASSWORD }}
 
       - name: Extract Commit SHA
-        id: vars
         run: echo "TAG=$(echo ${GITHUB_SHA} | cut -c1-7)" >> $GITHUB_ENV
 
       - name: Build and Push Docker Image
@@ -33,17 +32,37 @@ jobs:
           docker push sohail28/django-ecommerce:${TAG}
           docker push sohail28/django-ecommerce:latest
 
-      - name: Clone Infra Repo
+      # 🔥 UPDATE OLD EKS INFRA REPO
+      - name: Update EKS Infra Repo
         run: |
-    
-          git clone https://sohail-24:${{ secrets.INFRA_REPO_TOKEN }}@github.com/sohail-24/django_ecommerce_infra.git infra
-          cd infra
+          git clone https://sohail-24:${{ secrets.INFRA_REPO_TOKEN }}@github.com/sohail-24/django_ecommerce_infra.git eks-infra
+          cd eks-infra
           git config user.name "github-actions"
           git config user.email "actions@github.com"
-          sed -i "s|tag: .*|tag: \"${TAG}\"|g" charts/django-ecommerce/values.yaml
+
+          sed -i 's|tag: .*|tag: "'"${TAG}"'"|g' charts/django-ecommerce/values.yaml
+
           git add .
           if git diff --cached --quiet; then
-            echo "No changes detected"
+            echo "No changes detected in EKS repo"
+          else
+            git commit -m "ci: update image tag to ${TAG}"
+            git push
+          fi
+
+      # 🔥 UPDATE KUBEADM / HELM REPO
+      - name: Update Kubeadm Helm Repo
+        run: |
+          git clone https://sohail-24:${{ secrets.INFRA_REPO_TOKEN }}@github.com/sohail-24/devops-ecommerce-kubeadm.git kubeadm-infra
+          cd kubeadm-infra
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+
+          sed -i 's|tag: .*|tag: "'"${TAG}"'"|g' helm-charts/django-ecommerce/values.yaml
+
+          git add .
+          if git diff --cached --quiet; then
+            echo "No changes detected in kubeadm repo"
           else
             git commit -m "ci: update image tag to ${TAG}"
             git push
