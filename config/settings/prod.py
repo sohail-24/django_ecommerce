@@ -4,6 +4,7 @@ Hardened configuration for production deployment.
 """
 
 from .base import *
+from django.core.exceptions import ImproperlyConfigured
 
 # =============================================================================
 # SECURITY SETTINGS
@@ -12,30 +13,30 @@ from .base import *
 DEBUG = False
 
 # Ensure ALLOWED_HOSTS is properly configured
-#ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=[])
+# You can later switch this to env.list(...)
 ALLOWED_HOSTS = ["*"]
+
 if not ALLOWED_HOSTS:
     raise ImproperlyConfigured("ALLOWED_HOSTS must be set in production")
 
-# HTTPS Security
+# =============================================================================
+# HTTPS / SECURITY (TEMPORARY HTTP MODE)
+# =============================================================================
 
-
-# HTTPS Security (TEMPORARY – HTTP mode)
 SECURE_SSL_REDIRECT = False
 # SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
-
 
 # Cookies
 SESSION_COOKIE_SECURE = False
 CSRF_COOKIE_SECURE = False
-SESSION_COOKIE_SAMESITE = "Strict"
-CSRF_COOKIE_SAMESITE = "Strict"
+SESSION_COOKIE_SAMESITE = "Lax"
+CSRF_COOKIE_SAMESITE = "Lax"
 
 # Security Headers
 SECURE_BROWSER_XSS_FILTER = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
 X_FRAME_OPTIONS = "DENY"
-SECURE_HSTS_SECONDS = 31536000  # 1 year
+SECURE_HSTS_SECONDS = 31536000
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 SECURE_HSTS_PRELOAD = True
 
@@ -43,17 +44,15 @@ SECURE_HSTS_PRELOAD = True
 # DATABASE
 # =============================================================================
 
-# Use connection pooling in production
 DATABASES["default"]["CONN_MAX_AGE"] = env.int("DB_CONN_MAX_AGE", default=600)
 
-# Database connection retry
 DATABASES["default"]["OPTIONS"] = {
     "connect_timeout": 10,
-    "options": "-c statement_timeout=30000",  # 30 seconds
+    "options": "-c statement_timeout=30000",
 }
 
 # =============================================================================
-# STATIC FILES (Production - with WhiteNoise)
+# STATIC FILES (Production - WhiteNoise)
 # =============================================================================
 
 INSTALLED_APPS = ["whitenoise.runserver_nostatic"] + INSTALLED_APPS
@@ -63,26 +62,37 @@ MIDDLEWARE = [
     "whitenoise.middleware.WhiteNoiseMiddleware",
 ] + MIDDLEWARE[1:]
 
-# WhiteNoise Configuration
-STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 WHITENOISE_ROOT = BASE_DIR / "staticfiles"
 
 # =============================================================================
-# MEDIA FILES (S3-Compatible Storage)
+# MEDIA FILES (AWS S3)
 # =============================================================================
 
-# Uncomment when using S3-compatible storage (AWS S3, MinIO, etc.)
-# DEFAULT_FILE_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
-# AWS_ACCESS_KEY_ID = env("AWS_ACCESS_KEY_ID")
-# AWS_SECRET_ACCESS_KEY = env("AWS_SECRET_ACCESS_KEY")
-# AWS_STORAGE_BUCKET_NAME = env("AWS_STORAGE_BUCKET_NAME")
-# AWS_S3_REGION_NAME = env("AWS_S3_REGION_NAME")
-# AWS_S3_CUSTOM_DOMAIN = env("AWS_S3_CUSTOM_DOMAIN")
-# AWS_S3_OBJECT_PARAMETERS = {
-#     "CacheControl": "max-age=86400",
-# }
-# AWS_DEFAULT_ACL = "public-read"
-# AWS_QUERYSTRING_AUTH = False
+AWS_ACCESS_KEY_ID = env("AWS_ACCESS_KEY_ID", default="")
+AWS_SECRET_ACCESS_KEY = env("AWS_SECRET_ACCESS_KEY", default="")
+AWS_STORAGE_BUCKET_NAME = env("AWS_STORAGE_BUCKET_NAME", default="")
+AWS_S3_REGION_NAME = env("AWS_S3_REGION_NAME", default="ap-south-1")
+
+AWS_QUERYSTRING_AUTH = False
+AWS_DEFAULT_ACL = None
+AWS_S3_FILE_OVERWRITE = False
+
+AWS_S3_OBJECT_PARAMETERS = {
+    "CacheControl": "max-age=86400",
+}
+
+AWS_S3_CUSTOM_DOMAIN = f"{AWS_STORAGE_BUCKET_NAME}.s3.{AWS_S3_REGION_NAME}.amazonaws.com"
+
+MEDIA_URL = f"https://{AWS_S3_CUSTOM_DOMAIN}/"
+
+STORAGES = {
+    "default": {
+        "BACKEND": "storages.backends.s3.S3Storage",
+    },
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+    },
+}
 
 # =============================================================================
 # CACHING (Redis in Production)
@@ -104,23 +114,9 @@ CACHES = {
     }
 }
 
-SESSION_ENGINE = "django.contrib.sessions.backends.cache"
-SESSION_CACHE_ALIAS = "default"
-
-
-
-# =============================================================================
-# CACHING (TEMPORARY – no Redis)
-# =============================================================================
-
-#CACHES = {
-#    "default": {
-#        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
-#    }
-#}
-
-# Use DB sessions instead of Redis
+# TEMP: use DB sessions instead of Redis sessions
 SESSION_ENGINE = "django.contrib.sessions.backends.db"
+
 # =============================================================================
 # EMAIL (Production SMTP)
 # =============================================================================
@@ -179,42 +175,18 @@ LOGGING = {
 # CELERY (Production)
 # =============================================================================
 
-CELERY_BROKER_URL = env("CELERY_BROKER_URL")
-CELERY_RESULT_BACKEND = env("CELERY_RESULT_BACKEND")
+CELERY_BROKER_URL = env("CELERY_BROKER_URL", default="")
+CELERY_RESULT_BACKEND = env("CELERY_RESULT_BACKEND", default="")
 
-# Celery production settings
 CELERY_WORKER_PREFETCH_MULTIPLIER = 4
 CELERY_WORKER_MAX_TASKS_PER_CHILD = 1000
 CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
 CELERY_BROKER_CONNECTION_MAX_RETRIES = 10
-
-# Task result expiry
-CELERY_RESULT_EXPIRES = 3600  # 1 hour
-
-# =============================================================================
-# ERROR REPORTING
-# =============================================================================
-
-# Future: Configure Sentry
-# import sentry_sdk
-# from sentry_sdk.integrations.django import DjangoIntegration
-# from sentry_sdk.integrations.celery import CeleryIntegration
-#
-# sentry_sdk.init(
-#     dsn=env("SENTRY_DSN"),
-#     integrations=[
-#         DjangoIntegration(),
-#         CeleryIntegration(),
-#     ],
-#     traces_sample_rate=0.1,
-#     send_default_pii=True,
-# )
+CELERY_RESULT_EXPIRES = 3600
 
 # =============================================================================
 # PERFORMANCE
 # =============================================================================
-
-# Template caching
 
 TEMPLATES[0]["APP_DIRS"] = False
 TEMPLATES[0]["OPTIONS"]["loaders"] = [
@@ -231,23 +203,15 @@ TEMPLATES[0]["OPTIONS"]["loaders"] = [
 # HEALTH CHECK
 # =============================================================================
 
-# Health check token for load balancer verification
 HEALTH_CHECK_TOKEN = env("HEALTH_CHECK_TOKEN", default="")
 
-
-
-
 # =============================================================================
-# PROXY + CSRF (K8s + NGINX)
+# PROXY + CSRF
 # =============================================================================
-
 
 CSRF_TRUSTED_ORIGINS = [
-    "http://k8s-ecommerc-djangoin-9b90197ea7-53381200.ap-south-1.elb.amazonaws.com"
+    "http://13.127.135.221:31284",
 ]
 
 USE_X_FORWARDED_HOST = True
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
-
-SESSION_COOKIE_SAMESITE = "Lax"
-CSRF_COOKIE_SAMESITE = "Lax"
