@@ -9,6 +9,9 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
+    env:
+      IMAGE_NAME: sohail28/django-ecommerce
+
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -26,11 +29,15 @@ jobs:
         run: echo "TAG=$(echo ${GITHUB_SHA} | cut -c1-7)" >> $GITHUB_ENV
 
       - name: Build and Push Docker Image
-        run: |
-          docker build -t sohail28/django-ecommerce:${TAG} .
-          docker tag sohail28/django-ecommerce:${TAG} sohail28/django-ecommerce:latest
-          docker push sohail28/django-ecommerce:${TAG}
-          docker push sohail28/django-ecommerce:latest
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ env.IMAGE_NAME }}:${{ env.TAG }}
+            ${{ env.IMAGE_NAME }}:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
       # 🔥 UPDATE OLD EKS INFRA REPO
       - name: Update EKS Infra Repo
