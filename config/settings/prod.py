@@ -69,8 +69,18 @@ WHITENOISE_ROOT = BASE_DIR / "staticfiles"
 # MEDIA FILES (AWS S3)
 # =============================================================================
 
-AWS_ACCESS_KEY_ID = env("AWS_ACCESS_KEY_ID", default="")
-AWS_SECRET_ACCESS_KEY = env("AWS_SECRET_ACCESS_KEY", default="")
+import os
+
+AWS_STORAGE_BUCKET_NAME = env("AWS_STORAGE_BUCKET_NAME")
+AWS_S3_REGION_NAME = env("AWS_S3_REGION_NAME", default="ap-south-1")
+
+# ✅ Support BOTH EKS (IRSA) and kubeadm (keys)
+if os.getenv("AWS_ACCESS_KEY_ID"):
+    AWS_ACCESS_KEY_ID = env("AWS_ACCESS_KEY_ID")
+    AWS_SECRET_ACCESS_KEY = env("AWS_SECRET_ACCESS_KEY")
+
+# If not present → boto3 will automatically use IAM Role (IRSA)
+
 AWS_STORAGE_BUCKET_NAME = env("AWS_STORAGE_BUCKET_NAME", default="")
 AWS_S3_REGION_NAME = env("AWS_S3_REGION_NAME", default="ap-south-1")
 
